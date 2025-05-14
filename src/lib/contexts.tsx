@@ -1,6 +1,9 @@
+
 "use client";
 import type { Recipe, WeeklySchedule, DayOfWeek, MealTime } from '@/types';
 import { createContext, useContext, useState, type ReactNode, useEffect } from 'react';
+import { DAYS_OF_WEEK, MEAL_TIMES } from '@/types'; // Added imports
+import { toast } from '@/hooks/use-toast'; // Added import
 
 // --- Recipes Context ---
 interface RecipesContextType {
@@ -64,6 +67,7 @@ interface ScheduleContextType {
   schedule: WeeklySchedule;
   assignRecipeToSlot: (day: DayOfWeek, mealTime: MealTime, recipeId: string | null) => void;
   getRecipeForSlot: (day: DayOfWeek, mealTime: MealTime) => Recipe | undefined;
+  autoFillWeek: () => void; // Added autoFillWeek
 }
 
 const initialSchedule: WeeklySchedule = {
@@ -82,10 +86,8 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
   const [schedule, setSchedule] = useState<WeeklySchedule>(() => {
      if (typeof window !== 'undefined') {
       const savedSchedule = localStorage.getItem('mealwise_schedule');
-      // Ensure saved schedule matches new structure (no breakfast)
       if (savedSchedule) {
         const parsedSchedule = JSON.parse(savedSchedule);
-        // Simple migration: remove breakfast if it exists
         Object.keys(parsedSchedule).forEach(day => {
           if (parsedSchedule[day as DayOfWeek].hasOwnProperty('breakfast')) {
             delete parsedSchedule[day as DayOfWeek].breakfast;
@@ -97,7 +99,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
     }
     return initialSchedule;
   });
-  const { getRecipeById } = useRecipes();
+  const { getRecipeById, recipes } = useRecipes(); // Added recipes from useRecipes
 
 
   useEffect(() => {
@@ -115,12 +117,49 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getRecipeForSlot = (day: DayOfWeek, mealTime: MealTime): Recipe | undefined => {
-    const recipeId = schedule[day]?.[mealTime]; // Added optional chaining for safety if schedule structure is old
+    const recipeId = schedule[day]?.[mealTime];
     return recipeId ? getRecipeById(recipeId) : undefined;
   };
 
+  const autoFillWeek = () => {
+    if (!recipes || recipes.length === 0) {
+      toast({
+        title: "No Recipes Available",
+        description: "Add some recipes before auto-filling the week.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newSchedule: WeeklySchedule = { ...initialSchedule }; // Start with a fresh schedule or deep copy current
+    // Deep copy initialSchedule to ensure all days and meal times are present
+    Object.keys(initialSchedule).forEach(dayKey => {
+      const day = dayKey as DayOfWeek;
+      newSchedule[day] = { ...initialSchedule[day] };
+    });
+
+
+    DAYS_OF_WEEK.forEach(day => {
+      MEAL_TIMES.forEach(mealTime => {
+        const randomRecipeIndex = Math.floor(Math.random() * recipes.length);
+        const selectedRecipe = recipes[randomRecipeIndex];
+        if (selectedRecipe) {
+          newSchedule[day][mealTime] = selectedRecipe.id;
+        } else {
+          newSchedule[day][mealTime] = null; // Should not happen if recipes array is not empty
+        }
+      });
+    });
+
+    setSchedule(newSchedule);
+    toast({
+      title: "Week Auto-Filled!",
+      description: "Your weekly meal plan has been populated.",
+    });
+  };
+
   return (
-    <ScheduleContext.Provider value={{ schedule, assignRecipeToSlot, getRecipeForSlot }}>
+    <ScheduleContext.Provider value={{ schedule, assignRecipeToSlot, getRecipeForSlot, autoFillWeek }}>
       {children}
     </ScheduleContext.Provider>
   );
