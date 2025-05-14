@@ -9,7 +9,7 @@ export interface Recipe {
   name: string;
   ingredients: Ingredient[];
   instructions: string;
-  mealTypes?: MealTime[]; // Optional: lunch, dinner
+  color?: string; // Optional: for card background color
   dietaryTags?: string[]; // Optional: vegetarian, vegan, gluten-free
 }
 
@@ -42,15 +42,3 @@ export interface MealSlot {
 }
 
 export type WeeklySchedule = Record<DayOfWeek, Record<MealTime, string | null>>;
-
-// For AI Suggestions - Types removed as feature is deleted
-// export interface AISuggestionInput {
-//   dietaryPreferences: string;
-//   availableIngredients: string;
-// }
-
-// export interface AISuggestion {
-//   id: string; // Could be derived from recipe name or a hash
-//   name: string;
-//   // Potentially more details if the AI provides them, like basic ingredients/instructions
-// }

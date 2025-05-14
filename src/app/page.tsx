@@ -3,13 +3,12 @@
 import { WeeklyMealGrid } from "@/components/WeeklyMealGrid";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { PlusCircle, Sparkles, GripVertical } from "lucide-react"; // Added Sparkles, GripVertical
+import { PlusCircle, Sparkles } from "lucide-react";
 import { useSchedule, useRecipes } from "@/lib/contexts"; 
 import { toast } from "@/hooks/use-toast"; 
-import type { Recipe } from "@/types"; // Added Recipe type
-import type { DragEvent } from "react"; // Added DragEvent
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Added Card components
-import { ScrollArea } from "@/components/ui/scroll-area"; // Added ScrollArea
+import type { DragEvent } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 export default function WeeklyViewPage() {
@@ -57,24 +56,32 @@ export default function WeeklyViewPage() {
           {recipes.length > 0 ? (
             <ScrollArea className="h-[300px] pr-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {recipes.map((recipe) => (
-                  <Card 
-                    key={recipe.id} 
-                    className="cursor-grab shadow-sm hover:shadow-md transition-shadow"
-                    draggable
-                    onDragStart={(e) => handleDragStartFromList(e, recipe.id)}
-                  >
-                    <CardHeader className="p-4">
-                      <CardTitle className="text-base truncate" title={recipe.name}>
-                         {recipe.name}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0 text-xs text-muted-foreground">
-                      {recipe.ingredients.slice(0,3).map(ing => ing.name).join(', ') || "No key ingredients listed."}
-                       {recipe.ingredients.length > 3 ? '...' : ''}
-                    </CardContent>
-                  </Card>
-                ))}
+                {recipes.map((recipe) => {
+                  const cardStyle = recipe.color ? { backgroundColor: recipe.color } : {};
+                  const isDarkBackground = recipe.color && parseInt(recipe.color.substring(1, 3), 16) * 0.299 + parseInt(recipe.color.substring(3, 5), 16) * 0.587 + parseInt(recipe.color.substring(5, 7), 16) * 0.114 < 128;
+                  const textClass = isDarkBackground ? "text-primary-foreground" : "text-card-foreground";
+                  const mutedTextClass = isDarkBackground ? "text-primary-foreground/80" : "text-muted-foreground";
+
+                  return (
+                    <Card 
+                      key={recipe.id} 
+                      className="cursor-grab shadow-sm hover:shadow-md transition-shadow"
+                      style={cardStyle}
+                      draggable
+                      onDragStart={(e) => handleDragStartFromList(e, recipe.id)}
+                    >
+                      <CardHeader className="p-4">
+                        <CardTitle className={cn("text-base truncate", textClass)} title={recipe.name}>
+                           {recipe.name}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className={cn("p-4 pt-0 text-xs", mutedTextClass)}>
+                        {recipe.ingredients.slice(0,3).map(ing => ing.name).join(', ') || "No key ingredients listed."}
+                         {recipe.ingredients.length > 3 ? '...' : ''}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </ScrollArea>
           ) : (

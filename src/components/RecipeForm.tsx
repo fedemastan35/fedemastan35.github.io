@@ -1,6 +1,6 @@
 "use client";
-import type { Recipe, Ingredient, MealTime } from "@/types";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import type { Recipe, Ingredient } from "@/types";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -9,13 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Trash2, PlusCircle } from "lucide-react";
-import { MEAL_TIMES } from "@/types";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "@/hooks/use-toast";
+import { Trash2, PlusCircle, Palette } from "lucide-react"; // Added Palette icon
 
 const ingredientSchema = z.object({
-  id: z.string().optional(), // Keep ID for existing ingredients during update
+  id: z.string().optional(),
   name: z.string().min(1, "Ingredient name is required"),
   quantity: z.string().min(1, "Quantity is required"),
 });
@@ -24,28 +21,33 @@ const recipeFormSchema = z.object({
   name: z.string().min(1, "Recipe name is required"),
   ingredients: z.array(ingredientSchema).min(1, "At least one ingredient is required"),
   instructions: z.string().min(1, "Instructions are required"),
-  mealTypes: z.array(z.enum(MEAL_TIMES)).optional(),
+  color: z.string().optional(), // Added color field
+  dietaryTags: z.array(z.string()).optional(), // Assuming dietaryTags might still be relevant
 });
 
 type RecipeFormData = z.infer<typeof recipeFormSchema>;
 
 interface RecipeFormProps {
   initialData?: Recipe;
-  onSubmit: (data: RecipeFormData) => void;
+  onSubmit: (data: Omit<Recipe, 'id'>) => void; // Omit 'id' as it's handled by context
   isSubmitting?: boolean;
 }
+
+const DEFAULT_RECIPE_COLOR = "#F3F4F6"; // A light gray, similar to bg-muted
 
 export function RecipeForm({ initialData, onSubmit, isSubmitting }: RecipeFormProps) {
   const form = useForm<RecipeFormData>({
     resolver: zodResolver(recipeFormSchema),
     defaultValues: initialData ? {
       ...initialData,
-      ingredients: initialData.ingredients.map(ing => ({ ...ing, id: ing.id || crypto.randomUUID() })), // Ensure ID for field array key
+      ingredients: initialData.ingredients.map(ing => ({ ...ing, id: ing.id || crypto.randomUUID() })),
+      color: initialData.color || DEFAULT_RECIPE_COLOR,
     } : {
       name: "",
       ingredients: [{ id: crypto.randomUUID(), name: "", quantity: "" }],
       instructions: "",
-      mealTypes: [],
+      color: DEFAULT_RECIPE_COLOR,
+      dietaryTags: [],
     }
   });
 
@@ -59,7 +61,8 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting }: RecipeFormPr
       ...data,
       ingredients: data.ingredients.map(ing => ({...ing, id: ing.id || crypto.randomUUID() })),
     };
-    onSubmit(processedData);
+    // onSubmit expects Omit<Recipe, 'id'>, which matches RecipeFormData if it doesn't have id
+    onSubmit(processedData as Omit<Recipe, 'id'>);
   };
 
   return (
@@ -78,6 +81,29 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting }: RecipeFormPr
                   <FormLabel>Recipe Name</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., Spicy Tofu Scramble" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="color"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center"><Palette className="mr-2 h-4 w-4" /> Card Color</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center gap-2">
+                      <Input type="color" {...field} className="w-16 h-10 p-1" />
+                      <Input 
+                        type="text" 
+                        value={field.value} 
+                        onChange={field.onChange} 
+                        placeholder="#F3F4F6" 
+                        className="max-w-[120px]"
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -123,6 +149,9 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting }: RecipeFormPr
               {form.formState.errors.ingredients && !form.formState.errors.ingredients.root && (
                  <p className="text-sm font-medium text-destructive mt-1">{form.formState.errors.ingredients.message}</p>
               )}
+               {form.formState.errors.ingredients?.root && (
+                <p className="text-sm font-medium text-destructive mt-1">{form.formState.errors.ingredients.root.message}</p>
+              )}
             </div>
             
             <FormField
@@ -138,50 +167,22 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting }: RecipeFormPr
                 </FormItem>
               )}
             />
-
-            <FormField
+            
+            {/* Dietary Tags (Optional) - Retained for now, can be removed if not needed */}
+             <FormField
               control={form.control}
-              name="mealTypes"
-              render={() => (
+              name="dietaryTags"
+              render={({ field }) => (
                 <FormItem>
-                  <div className="mb-4">
-                    <FormLabel className="text-base">Meal Types (Optional)</FormLabel>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {MEAL_TIMES.map((mealTime) => (
-                    <FormField
-                      key={mealTime}
-                      control={form.control}
-                      name="mealTypes"
-                      render={({ field }) => {
-                        return (
-                          <FormItem
-                            key={mealTime}
-                            className="flex flex-row items-start space-x-3 space-y-0"
-                          >
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(mealTime)}
-                                onCheckedChange={(checked) => {
-                                  return checked
-                                    ? field.onChange([...(field.value || []), mealTime])
-                                    : field.onChange(
-                                        field.value?.filter(
-                                          (value) => value !== mealTime
-                                        )
-                                      )
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="font-normal capitalize">
-                              {mealTime}
-                            </FormLabel>
-                          </FormItem>
-                        )
-                      }}
+                  <FormLabel>Dietary Tags (Optional, comma-separated)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="e.g., vegan, gluten-free" 
+                      {...field} 
+                      value={Array.isArray(field.value) ? field.value.join(', ') : ''}
+                      onChange={(e) => field.onChange(e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag))}
                     />
-                  ))}
-                  </div>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
