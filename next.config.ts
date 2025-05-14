@@ -1,13 +1,10 @@
 import type {NextConfig} from 'next';
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  output: "export",  // <=== enables static exports
-  reactStrictMode: true,
-};
-
-
+const nextConfig: NextConfig = {
+  /* config options here */
   typescript: {
+    // !! WARN !!
+    // Dangerously allow production builds to successfully complete even if
     ignoreBuildErrors: true,
   },
   eslint: {
@@ -22,5 +19,9 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  output: "export",
+  reactStrictMode: true,
 };
-module.exports = nextConfig;  /* config options here */
+
+export default nextConfig;
