@@ -1,4 +1,3 @@
-
 // This file is a Server Component by default
 import EditRecipeClientPage from './edit-client-page';
 
