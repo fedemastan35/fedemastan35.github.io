@@ -78,7 +78,7 @@ export function ShoppingListComponent() {
     const listText = filteredShoppingList.map(item => `${item.name} (${item.quantity}) - for ${item.recipeName}`).join("\n");
     navigator.clipboard.writeText(listText)
       .then(() => toast({ title: "Copied to clipboard!"}))
-      .catch(()_ => toast({title: "Failed to copy", variant: "destructive"}));
+      .catch(_ => toast({title: "Failed to copy", variant: "destructive"}));
   };
 
 
