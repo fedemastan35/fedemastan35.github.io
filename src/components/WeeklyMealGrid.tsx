@@ -161,17 +161,17 @@ export function WeeklyMealGrid() {
 
   return (
     <div className="overflow-x-auto">
-      <div className="grid grid-cols-1 md:grid-cols-[auto_repeat(7,minmax(150px,1fr))] gap-px bg-border border rounded-lg shadow-md">
+      <div className="grid grid-cols-1 md:grid-cols-[auto_repeat(7,minmax(90px,1fr))] gap-px bg-border border rounded-lg shadow-md">
         <div className="hidden md:flex items-center justify-center p-2 font-semibold bg-card text-card-foreground sticky left-0 z-10"></div>
         {DAYS_OF_WEEK.map((day) => (
-          <div key={day} className="p-3 font-semibold text-center bg-card text-card-foreground border-b md:border-r">
+          <div key={day} className="p-2 font-semibold text-center bg-card text-card-foreground border-b md:border-r">
             {day}
           </div>
         ))}
 
         {MEAL_TIMES.map((mealTime) => (
           <>
-            <div key={`${mealTime}-label`} className="hidden md:flex items-center justify-center p-3 font-semibold capitalize bg-card text-card-foreground border-r sticky left-0 z-10">
+            <div key={`${mealTime}-label`} className="hidden md:flex items-center justify-center p-2 font-semibold capitalize bg-card text-card-foreground border-r sticky left-0 z-10">
               {mealTime}
             </div>
             {DAYS_OF_WEEK.map((day) => {
@@ -180,7 +180,6 @@ export function WeeklyMealGrid() {
               const cardStyle = recipe?.color ? { backgroundColor: recipe.color } : {};
               const isDarkBackground = recipe?.color && parseInt(recipe.color.substring(1, 3), 16) * 0.299 + parseInt(recipe.color.substring(3, 5), 16) * 0.587 + parseInt(recipe.color.substring(5, 7), 16) * 0.114 < 128;
               const textClass = isDarkBackground ? "text-primary-foreground" : "text-card-foreground";
-              // const mutedTextClass = isDarkBackground ? "text-primary-foreground/70" : "text-muted-foreground"; // Muted text class not used after removing dietary tags display
 
 
               return (
@@ -211,7 +210,7 @@ export function WeeklyMealGrid() {
                       onDragStart={recipe ? (e) => handleDragStart(e, recipe.id, 'grid', day, mealTime) : undefined}
                       onDragEnd={recipe ? handleDragEnd : undefined}
                     >
-                      <CardContent className="p-3 w-full">
+                      <CardContent className="p-2 w-full">
                         {recipe ? (
                           <>
                             <p className={cn("font-semibold text-sm truncate", textClass)} title={recipe.name}>{recipe.name}</p>
@@ -234,3 +233,4 @@ export function WeeklyMealGrid() {
     </div>
   );
 }
+
