@@ -180,7 +180,7 @@ export function WeeklyMealGrid() {
               const cardStyle = recipe?.color ? { backgroundColor: recipe.color } : {};
               const isDarkBackground = recipe?.color && parseInt(recipe.color.substring(1, 3), 16) * 0.299 + parseInt(recipe.color.substring(3, 5), 16) * 0.587 + parseInt(recipe.color.substring(5, 7), 16) * 0.114 < 128;
               const textClass = isDarkBackground ? "text-primary-foreground" : "text-card-foreground";
-              const mutedTextClass = isDarkBackground ? "text-primary-foreground/70" : "text-muted-foreground";
+              // const mutedTextClass = isDarkBackground ? "text-primary-foreground/70" : "text-muted-foreground"; // Muted text class not used after removing dietary tags display
 
 
               return (
@@ -204,7 +204,7 @@ export function WeeklyMealGrid() {
                       className={cn(
                         "flex-grow flex flex-col items-center justify-center text-center hover:shadow-md transition-shadow",
                         recipe ? "cursor-grab" : "cursor-pointer",
-                        !recipe && "bg-background/30 hover:bg-background/50" // Only apply default bg if no recipe
+                        !recipe && "bg-background/30 hover:bg-background/50" 
                       )}
                       style={cardStyle}
                       draggable={!!recipe}
@@ -215,9 +215,6 @@ export function WeeklyMealGrid() {
                         {recipe ? (
                           <>
                             <p className={cn("font-semibold text-sm truncate", textClass)} title={recipe.name}>{recipe.name}</p>
-                            {recipe.dietaryTags && recipe.dietaryTags.length > 0 && (
-                              <p className={cn("text-xs truncate", mutedTextClass)} title={recipe.dietaryTags.join(', ')}>{recipe.dietaryTags.join(', ')}</p>
-                            )}
                           </>
                         ) : (
                           <div className="text-muted-foreground">

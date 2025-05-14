@@ -10,7 +10,6 @@ export interface Recipe {
   ingredients: Ingredient[];
   instructions: string;
   color?: string; // Optional: for card background color
-  dietaryTags?: string[]; // Optional: vegetarian, vegan, gluten-free
 }
 
 export type MealTime = "lunch" | "dinner";

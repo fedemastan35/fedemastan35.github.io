@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Trash2, PlusCircle, Palette } from "lucide-react"; // Added Palette icon
+import { Trash2, PlusCircle, Palette } from "lucide-react";
 
 const ingredientSchema = z.object({
   id: z.string().optional(),
@@ -21,19 +21,18 @@ const recipeFormSchema = z.object({
   name: z.string().min(1, "Recipe name is required"),
   ingredients: z.array(ingredientSchema).min(1, "At least one ingredient is required"),
   instructions: z.string().min(1, "Instructions are required"),
-  color: z.string().optional(), // Added color field
-  dietaryTags: z.array(z.string()).optional(), // Assuming dietaryTags might still be relevant
+  color: z.string().optional(),
 });
 
 type RecipeFormData = z.infer<typeof recipeFormSchema>;
 
 interface RecipeFormProps {
   initialData?: Recipe;
-  onSubmit: (data: Omit<Recipe, 'id'>) => void; // Omit 'id' as it's handled by context
+  onSubmit: (data: Omit<Recipe, 'id'>) => void;
   isSubmitting?: boolean;
 }
 
-const DEFAULT_RECIPE_COLOR = "#F3F4F6"; // A light gray, similar to bg-muted
+const DEFAULT_RECIPE_COLOR = "#F3F4F6"; 
 
 export function RecipeForm({ initialData, onSubmit, isSubmitting }: RecipeFormProps) {
   const form = useForm<RecipeFormData>({
@@ -47,7 +46,6 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting }: RecipeFormPr
       ingredients: [{ id: crypto.randomUUID(), name: "", quantity: "" }],
       instructions: "",
       color: DEFAULT_RECIPE_COLOR,
-      dietaryTags: [],
     }
   });
 
@@ -61,7 +59,6 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting }: RecipeFormPr
       ...data,
       ingredients: data.ingredients.map(ing => ({...ing, id: ing.id || crypto.randomUUID() })),
     };
-    // onSubmit expects Omit<Recipe, 'id'>, which matches RecipeFormData if it doesn't have id
     onSubmit(processedData as Omit<Recipe, 'id'>);
   };
 
@@ -162,26 +159,6 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting }: RecipeFormPr
                   <FormLabel>Instructions</FormLabel>
                   <FormControl>
                     <Textarea placeholder="Step-by-step instructions..." {...field} rows={5} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Dietary Tags (Optional) - Retained for now, can be removed if not needed */}
-             <FormField
-              control={form.control}
-              name="dietaryTags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dietary Tags (Optional, comma-separated)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g., vegan, gluten-free" 
-                      {...field} 
-                      value={Array.isArray(field.value) ? field.value.join(', ') : ''}
-                      onChange={(e) => field.onChange(e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag))}
-                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

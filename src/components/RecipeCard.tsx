@@ -12,14 +12,12 @@ import {
 
 interface RecipeCardProps {
   recipe: Recipe;
-  onDelete?: (recipeId: string) => void; // onDelete is handled by AlertDialogTrigger now
+  onDelete?: (recipeId: string) => void; 
   className?: string;
 }
 
 export function RecipeCard({ recipe, onDelete, className }: RecipeCardProps) {
   const cardStyle = recipe.color ? { backgroundColor: recipe.color } : {};
-  // Basic check for text contrast. This is a very simple heuristic.
-  // A more robust solution would involve calculating luminance.
   const isDarkBackground = recipe.color && parseInt(recipe.color.substring(1, 3), 16) * 0.299 + parseInt(recipe.color.substring(3, 5), 16) * 0.587 + parseInt(recipe.color.substring(5, 7), 16) * 0.114 < 128;
   const textClass = isDarkBackground ? "text-primary-foreground" : "text-card-foreground";
   const mutedTextClass = isDarkBackground ? "text-primary-foreground/80" : "text-muted-foreground";
@@ -32,11 +30,6 @@ export function RecipeCard({ recipe, onDelete, className }: RecipeCardProps) {
     >
       <CardHeader>
         <CardTitle className={cn("truncate text-xl", textClass)}>{recipe.name}</CardTitle>
-        {recipe.dietaryTags && recipe.dietaryTags.length > 0 && (
-          <CardDescription className={cn("text-xs", mutedTextClass)}>
-            {recipe.dietaryTags.join(', ')}
-          </CardDescription>
-        )}
       </CardHeader>
       <CardContent className="flex-grow">
         <p className={cn("text-sm line-clamp-3", mutedTextClass)}>
