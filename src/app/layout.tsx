@@ -8,15 +8,9 @@ import { AppProviders } from '@/components/AppProviders';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { SidebarNav } from '@/components/navigation/SidebarNav';
 
-const geistSans = GeistSans({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = GeistMono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
+// The GeistSans and GeistMono imports are objects, not functions to be called.
+// Their .variable properties can be used directly.
+// The 'variable' and 'subsets' options are typically handled by the geist package itself.
 
 export const metadata: Metadata = {
   title: 'MealWise',
@@ -30,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
         <AppProviders>
           <SidebarProvider defaultOpen={true}>
             <SidebarNav />
