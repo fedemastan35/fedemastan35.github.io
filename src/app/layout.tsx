@@ -5,12 +5,7 @@ import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AppProviders } from '@/components/AppProviders';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { SidebarNav } from '@/components/navigation/SidebarNav';
-
-// The GeistSans and GeistMono imports are objects, not functions to be called.
-// Their .variable properties can be used directly.
-// The 'variable' and 'subsets' options are typically handled by the geist package itself.
+import { TopNav } from '@/components/navigation/TopNav';
 
 export const metadata: Metadata = {
   title: 'MealWise',
@@ -24,14 +19,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased flex flex-col min-h-svh`}>
         <AppProviders>
-          <SidebarProvider defaultOpen={true}>
-            <SidebarNav />
-            <SidebarInset>
-              {children}
-            </SidebarInset>
-          </SidebarProvider>
+          <TopNav />
+          <main className="container mx-auto px-4 md:px-6 py-6 flex-1 w-full">
+            {children}
+          </main>
           <Toaster />
         </AppProviders>
       </body>

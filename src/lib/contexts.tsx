@@ -67,13 +67,13 @@ interface ScheduleContextType {
 }
 
 const initialSchedule: WeeklySchedule = {
-  Monday: { breakfast: null, lunch: null, dinner: null },
-  Tuesday: { breakfast: null, lunch: null, dinner: null },
-  Wednesday: { breakfast: null, lunch: null, dinner: null },
-  Thursday: { breakfast: null, lunch: null, dinner: null },
-  Friday: { breakfast: null, lunch: null, dinner: null },
-  Saturday: { breakfast: null, lunch: null, dinner: null },
-  Sunday: { breakfast: null, lunch: null, dinner: null },
+  Monday: { lunch: null, dinner: null },
+  Tuesday: { lunch: null, dinner: null },
+  Wednesday: { lunch: null, dinner: null },
+  Thursday: { lunch: null, dinner: null },
+  Friday: { lunch: null, dinner: null },
+  Saturday: { lunch: null, dinner: null },
+  Sunday: { lunch: null, dinner: null },
 };
 
 const ScheduleContext = createContext<ScheduleContextType | undefined>(undefined);
@@ -82,7 +82,18 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
   const [schedule, setSchedule] = useState<WeeklySchedule>(() => {
      if (typeof window !== 'undefined') {
       const savedSchedule = localStorage.getItem('mealwise_schedule');
-      return savedSchedule ? JSON.parse(savedSchedule) : initialSchedule;
+      // Ensure saved schedule matches new structure (no breakfast)
+      if (savedSchedule) {
+        const parsedSchedule = JSON.parse(savedSchedule);
+        // Simple migration: remove breakfast if it exists
+        Object.keys(parsedSchedule).forEach(day => {
+          if (parsedSchedule[day as DayOfWeek].hasOwnProperty('breakfast')) {
+            delete parsedSchedule[day as DayOfWeek].breakfast;
+          }
+        });
+        return parsedSchedule;
+      }
+      return initialSchedule;
     }
     return initialSchedule;
   });
@@ -104,7 +115,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getRecipeForSlot = (day: DayOfWeek, mealTime: MealTime): Recipe | undefined => {
-    const recipeId = schedule[day][mealTime];
+    const recipeId = schedule[day]?.[mealTime]; // Added optional chaining for safety if schedule structure is old
     return recipeId ? getRecipeById(recipeId) : undefined;
   };
 

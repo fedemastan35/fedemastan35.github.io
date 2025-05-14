@@ -1,4 +1,4 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/suggest-recipe.ts';
+// Removed import for suggest-recipe.ts as the feature is being deleted.

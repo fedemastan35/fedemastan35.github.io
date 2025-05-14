@@ -9,12 +9,12 @@ export interface Recipe {
   name: string;
   ingredients: Ingredient[];
   instructions: string;
-  mealTypes?: MealTime[]; // Optional: breakfast, lunch, dinner
+  mealTypes?: MealTime[]; // Optional: lunch, dinner
   dietaryTags?: string[]; // Optional: vegetarian, vegan, gluten-free
 }
 
-export type MealTime = "breakfast" | "lunch" | "dinner";
-export const MEAL_TIMES: MealTime[] = ["breakfast", "lunch", "dinner"];
+export type MealTime = "lunch" | "dinner";
+export const MEAL_TIMES: MealTime[] = ["lunch", "dinner"];
 
 export type DayOfWeek = 
   | "Monday" 
@@ -43,14 +43,14 @@ export interface MealSlot {
 
 export type WeeklySchedule = Record<DayOfWeek, Record<MealTime, string | null>>;
 
-// For AI Suggestions
-export interface AISuggestionInput {
-  dietaryPreferences: string;
-  availableIngredients: string;
-}
+// For AI Suggestions - Types removed as feature is deleted
+// export interface AISuggestionInput {
+//   dietaryPreferences: string;
+//   availableIngredients: string;
+// }
 
-export interface AISuggestion {
-  id: string; // Could be derived from recipe name or a hash
-  name: string;
-  // Potentially more details if the AI provides them, like basic ingredients/instructions
-}
+// export interface AISuggestion {
+//   id: string; // Could be derived from recipe name or a hash
+//   name: string;
+//   // Potentially more details if the AI provides them, like basic ingredients/instructions
+// }

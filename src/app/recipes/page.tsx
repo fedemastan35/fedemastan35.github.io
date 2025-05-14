@@ -4,7 +4,7 @@ import { RecipeCard } from "@/components/RecipeCard";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Header } from "@/components/navigation/Header";
-import { PlusCircle, NotebookText } from "lucide-react";
+import { PlusCircle, NotebookText, Trash2, Edit3 } from "lucide-react"; // Added Trash2, Edit3
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,30 +50,7 @@ export default function RecipesPage() {
                   recipe={recipe} 
                   onDelete={() => { /* onDelete prop will trigger AlertDialog */}}
                   className="h-full"
-                >
-                  {/* Override footer to include AlertDialogTrigger for delete */}
-                  <div className="flex justify-between items-center gap-2 border-t p-4 pt-4">
-                     <div className="flex items-center gap-1">
-                        {/* Replicate meal type icon logic or simplify */}
-                        <NotebookText className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground capitalize">
-                          {recipe.mealTypes && recipe.mealTypes.length > 0 ? recipe.mealTypes[0] : 'Versatile'}
-                        </span>
-                      </div>
-                    <div className="flex gap-2">
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label="Delete recipe">
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <Link href={`/recipes/${recipe.id}/edit`} passHref>
-                        <Button variant="outline" size="icon" aria-label="Edit recipe">
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </RecipeCard>
+                />
                  <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -107,11 +84,3 @@ export default function RecipesPage() {
     </div>
   );
 }
-
-// Minimal RecipeCard structure for AlertDialog integration if original RecipeCard cannot be modified
-const MinimalRecipeCardContent = ({ recipe }: { recipe: any }) => (
-  <div>
-    <h3 className="font-semibold">{recipe.name}</h3>
-    <p className="text-sm text-muted-foreground line-clamp-2">{recipe.instructions}</p>
-  </div>
-);
