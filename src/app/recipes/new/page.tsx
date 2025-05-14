@@ -4,7 +4,7 @@ import { useRecipes } from "@/lib/contexts";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/navigation/Header";
 import { toast } from "@/hooks/use-toast";
-import type { Recipe } from "@/types"; // Assuming RecipeFormData is similar or part of Recipe
+import type { Recipe } from "@/types";
 import { useState } from "react";
 
 export default function NewRecipePage() {

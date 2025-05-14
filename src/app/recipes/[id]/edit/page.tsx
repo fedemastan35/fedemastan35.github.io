@@ -7,7 +7,6 @@ import type { Recipe } from "@/types";
 import { Header } from "@/components/navigation/Header";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-
 export default function EditRecipePage() {
   const router = useRouter();
   const params = useParams();

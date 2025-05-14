@@ -8,7 +8,6 @@ import { PlusCircle } from "lucide-react";
 export default function WeeklyViewPage() {
   return (
     <div className="flex flex-col h-full">
-      <Header title="Weekly Meal Plan" />
       <main className="flex-1 p-4 md:p-6 space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-semibold">Your Week Ahead</h2>

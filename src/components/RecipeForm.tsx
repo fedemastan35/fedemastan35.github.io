@@ -25,7 +25,6 @@ const recipeFormSchema = z.object({
   ingredients: z.array(ingredientSchema).min(1, "At least one ingredient is required"),
   instructions: z.string().min(1, "Instructions are required"),
   mealTypes: z.array(z.enum(MEAL_TIMES)).optional(),
-  dietaryTags: z.array(z.string()).optional().transform(tags => tags?.map(tag => tag.trim()).filter(tag => tag.length > 0) || []),
 });
 
 type RecipeFormData = z.infer<typeof recipeFormSchema>;
@@ -42,14 +41,12 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting }: RecipeFormPr
     defaultValues: initialData ? {
       ...initialData,
       ingredients: initialData.ingredients.map(ing => ({ ...ing, id: ing.id || crypto.randomUUID() })), // Ensure ID for field array key
-      dietaryTags: initialData.dietaryTags || [],
     } : {
       name: "",
       ingredients: [{ id: crypto.randomUUID(), name: "", quantity: "" }],
       instructions: "",
       mealTypes: [],
-      dietaryTags: [],
-    },
+    }
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -61,7 +58,6 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting }: RecipeFormPr
     const processedData = {
       ...data,
       ingredients: data.ingredients.map(ing => ({...ing, id: ing.id || crypto.randomUUID() })),
-      dietaryTags: data.dietaryTags?.map(tag => tag.trim()).filter(Boolean) || [],
     };
     onSubmit(processedData);
   };
@@ -191,25 +187,6 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting }: RecipeFormPr
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="dietaryTags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dietary Tags (Optional, comma-separated)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g., vegetarian, gluten-free, high-protein" 
-                      {...field} 
-                      value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value.split(',').map(tag => tag.trim()))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
           </CardContent>
           <CardFooter>
             <Button type="submit" disabled={isSubmitting}>
