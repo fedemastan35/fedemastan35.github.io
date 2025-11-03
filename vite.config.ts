@@ -11,10 +11,15 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     exclude: ['**/node_modules/**', '**/dist/**', '**/tests/**'],
-    pool: 'forks',
+    pool: 'threads',
     poolOptions: {
-      forks: {
-        singleFork: true,
+      threads: {
+        singleThread: true,
+      },
+    },
+    server: {
+      deps: {
+        inline: ['whatwg-url', 'webidl-conversions', 'jsdom'],
       },
     },
   },
