@@ -16,7 +16,7 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
-  "homepage": "https://federico.mastandrea.github.io/bookS",
+  "homepage": "https://fedemastan35.github.io",
   "dependencies": {
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
