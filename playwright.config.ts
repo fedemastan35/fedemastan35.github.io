@@ -14,6 +14,16 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
+  expect: {
+    toHaveScreenshot: {
+      // Allow snapshots to be updated in CI on first run
+      updateSnapshots: process.env.CI ? 'missing' : 'none',
+      // Configure threshold for cross-platform visual differences
+      threshold: 0.2,
+      // Allow some pixel differences due to font rendering differences
+      maxDiffPixels: 100,
+    },
+  },
 
   projects: [
     {

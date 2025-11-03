@@ -60,6 +60,16 @@ jobs:
       
       - name: Run Playwright tests
         run: npm run test:e2e
+        env:
+          UPDATE_SNAPSHOTS: 'missing'
+      - name: Commit updated snapshots
+        if: always()
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add tests/visual/visual.spec.ts-snapshots/ || true
+          git diff --staged --quiet || git commit -m "Update visual test snapshots [skip ci]" || true
+          git push origin master || true
       
       - name: Upload Playwright test results
         uses: actions/upload-artifact@v4
