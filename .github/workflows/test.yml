@@ -7,6 +7,9 @@ on:
     branches: [ master ]
   workflow_dispatch:  # Allows manual triggering from GitHub Actions tab
 
+permissions:
+  contents: write  # Allow committing snapshots
+
 jobs:
   unit-tests:
     name: Unit Tests
@@ -63,13 +66,12 @@ jobs:
         env:
           UPDATE_SNAPSHOTS: 'missing'
       - name: Commit updated snapshots
-        if: always()
+        if: failure() && always()
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add tests/visual/visual.spec.ts-snapshots/ || true
-          git diff --staged --quiet || git commit -m "Update visual test snapshots [skip ci]" || true
-          git push origin master || true
+          git diff --staged --quiet || (git commit -m "Update visual test snapshots [skip ci]" && git push origin master) || true
       
       - name: Upload Playwright test results
         uses: actions/upload-artifact@v4
