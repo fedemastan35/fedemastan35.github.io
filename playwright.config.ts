@@ -16,6 +16,8 @@ export default defineConfig({
   },
   expect: {
     toHaveScreenshot: {
+      // Allow missing snapshots to be created automatically in CI
+      updateSnapshots: process.env.CI ? 'missing' : 'none',
       // Configure threshold for cross-platform visual differences
       threshold: 0.2,
       // Allow some pixel differences due to font rendering differences
