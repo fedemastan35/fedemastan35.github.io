@@ -1,267 +1,215 @@
 import { test, expect } from '@playwright/test';
+import { BookTrackerPage } from '../pages/BookTrackerPage';
 
 test.describe('Book Tracking UI Tests', () => {
+  let bookTrackerPage: BookTrackerPage;
+
   test.beforeEach(async ({ page }) => {
-    // Clear localStorage before each test
-    await page.goto('/');
-    await page.evaluate(() => localStorage.clear());
-    await page.reload();
+    bookTrackerPage = new BookTrackerPage(page);
+    await bookTrackerPage.goto();
   });
 
-  test('should display empty state when no books', async ({ page }) => {
-    await page.goto('/');
-    
-    const emptyState = page.getByTestId('book-list-empty');
-    await expect(emptyState).toBeVisible();
-    await expect(emptyState).toContainText('No books in your collection yet');
+  test('should display empty state when no books', async () => {
+    await expect(bookTrackerPage.bookListEmpty).toBeVisible();
+    await expect(bookTrackerPage.bookListEmpty).toContainText('No books in your collection yet');
   });
 
-  test('should search for books using Open Library API', async ({ page }) => {
-    await page.goto('/');
-    
-    const searchInput = page.getByTestId('search-input');
-    await searchInput.fill('1984');
-    
-    const searchButton = page.getByTestId('search-button');
-    await searchButton.click();
-    
-    // Wait for results
-    const searchResults = page.getByTestId('search-results');
-    await expect(searchResults).toBeVisible({ timeout: 10000 });
+  test('should search for books using Open Library API', async () => {
+    await bookTrackerPage.searchForBook('1984');
+    await bookTrackerPage.waitForSearchResults();
     
     // Check that results contain search query
-    const results = page.getByTestId(/search-result-/);
+    const results = bookTrackerPage.page.getByTestId(/search-result-/);
     await expect(results.first()).toBeVisible();
   });
 
-  test('should add book from search results', async ({ page }) => {
-    await page.goto('/');
-    
-    // Search for a book
-    await page.getByTestId('search-input').fill('1984');
-    await page.getByTestId('search-button').click();
-    
-    // Wait for results and click add button
-    const addButton = page.getByTestId(/add-button-/).first();
-    await expect(addButton).toBeVisible({ timeout: 10000 });
-    await addButton.click();
+  test('should add book from search results', async () => {
+    await bookTrackerPage.searchForBook('1984');
+    await bookTrackerPage.waitForSearchResults();
+    await bookTrackerPage.addBookFromSearch(0);
     
     // Fill form and save
-    await expect(page.getByTestId('book-form')).toBeVisible();
-    await page.getByTestId('form-status').selectOption('want-to-read');
-    await page.getByTestId('form-save').click();
+    await expect(bookTrackerPage.bookForm).toBeVisible();
+    await bookTrackerPage.formStatus.selectOption('want-to-read');
+    await bookTrackerPage.formSave.click();
     
     // Verify book was added
-    await expect(page.getByTestId('book-list-empty')).not.toBeVisible();
-    const bookCard = page.getByTestId(/book-card-/).first();
-    await expect(bookCard).toBeVisible();
+    await expect(bookTrackerPage.bookListEmpty).not.toBeVisible();
+    await expect(bookTrackerPage.bookCards.first()).toBeVisible();
   });
 
-  test('should add book manually', async ({ page }) => {
-    await page.goto('/');
-    
-    // Click add book button
-    await page.getByTestId('add-book-button').click();
-    
-    // Fill form
-    await expect(page.getByTestId('book-form')).toBeVisible();
-    await page.getByTestId('form-title').fill('Test Book');
-    await page.getByTestId('form-author').fill('Test Author');
-    await page.getByTestId('form-year').fill('2024');
-    await page.getByTestId('form-status').selectOption('reading');
-    await page.getByTestId('form-save').click();
+  test('should add book manually', async () => {
+    await bookTrackerPage.addBookManually({
+      title: 'Test Book',
+      author: 'Test Author',
+      year: 2024,
+      status: 'reading',
+    });
     
     // Verify book was added
-    const bookCard = page.getByTestId(/book-card-/);
+    const bookCard = bookTrackerPage.bookCards.first();
     await expect(bookCard).toBeVisible();
     await expect(bookCard).toContainText('Test Book');
     await expect(bookCard).toContainText('Test Author');
   });
 
-  test('should edit book details', async ({ page }) => {
+  test('should edit book details', async () => {
     // First add a book manually
-    await page.goto('/');
-    await page.getByTestId('add-book-button').click();
-    await page.getByTestId('form-title').fill('Original Title');
-    await page.getByTestId('form-author').fill('Original Author');
-    await page.getByTestId('form-save').click();
-    
-    // Click edit button
-    const editButton = page.getByTestId(/edit-btn-/).first();
-    await editButton.click();
-    
-    // Modify and save
-    await expect(page.getByTestId('book-form')).toBeVisible();
-    await page.getByTestId('form-title').clear();
-    await page.getByTestId('form-title').fill('Updated Title');
-    await page.getByTestId('form-save').click();
-    
-    // Verify changes
-    await expect(page.getByTestId(/book-card-/)).toContainText('Updated Title');
-  });
-
-  test('should delete book', async ({ page }) => {
-    // Add a book first
-    await page.goto('/');
-    await page.getByTestId('add-book-button').click();
-    await page.getByTestId('form-title').fill('Book to Delete');
-    await page.getByTestId('form-save').click();
-    
-    // Set up dialog handler to accept the confirmation
-    page.on('dialog', async dialog => {
-      expect(dialog.type()).toBe('confirm');
-      await dialog.accept();
+    await bookTrackerPage.addBookManually({
+      title: 'Original Title',
+      author: 'Original Author',
     });
     
-    // Click delete button
-    const deleteButton = page.getByTestId(/delete-btn-/).first();
-    await deleteButton.click();
+    // Get the book ID from the first book card
+    const bookId = await bookTrackerPage.getBookIdByIndex(0);
     
-    // Wait for confirmation state (button text changes to "Confirm?")
-    await expect(deleteButton).toHaveText('Confirm?');
+    // Edit the book
+    await bookTrackerPage.editBook(bookId, {
+      title: 'Updated Title',
+    });
     
-    // Confirm deletion (triggers window.confirm dialog)
-    await deleteButton.click();
-    
-    // Verify book is removed
-    await expect(page.getByTestId('book-list-empty')).toBeVisible();
+    // Verify changes
+    await expect(bookTrackerPage.bookCards.first()).toContainText('Updated Title');
   });
 
-  test('should change book status', async ({ page }) => {
+  test('should delete book', async () => {
+    // Add a book first
+    await bookTrackerPage.addBookManually({
+      title: 'Book to Delete',
+    });
+    
+    // Get the book ID from the first book card
+    const bookId = await bookTrackerPage.getBookIdByIndex(0);
+    
+    // Delete the book
+    await bookTrackerPage.deleteBook(bookId);
+    
+    // Verify book is removed
+    await expect(bookTrackerPage.bookListEmpty).toBeVisible();
+  });
+
+  test('should change book status', async () => {
     // Add a book
-    await page.goto('/');
-    await page.getByTestId('add-book-button').click();
-    await page.getByTestId('form-title').fill('Status Test Book');
-    await page.getByTestId('form-status').selectOption('want-to-read');
-    await page.getByTestId('form-save').click();
+    await bookTrackerPage.addBookManually({
+      title: 'Status Test Book',
+      status: 'want-to-read',
+    });
+    
+    // Get the book ID
+    const bookId = await bookTrackerPage.getBookIdByIndex(0);
     
     // Change status
-    const statusSelect = page.getByTestId(/status-select-/).first();
-    await statusSelect.selectOption('reading');
+    await bookTrackerPage.changeBookStatus(bookId, 'reading');
     
     // Verify status changed
+    const statusSelect = bookTrackerPage.page.getByTestId(`status-select-${bookId}`);
     await expect(statusSelect).toHaveValue('reading');
   });
 
-  test('should rate a book', async ({ page }) => {
+  test('should rate a book', async () => {
     // Add a book
-    await page.goto('/');
-    await page.getByTestId('add-book-button').click();
-    await page.getByTestId('form-title').fill('Rating Test Book');
-    await page.getByTestId('form-save').click();
+    await bookTrackerPage.addBookManually({
+      title: 'Rating Test Book',
+    });
+    
+    // Get the book ID
+    const bookId = await bookTrackerPage.getBookIdByIndex(0);
     
     // Click on 4th star to rate
-    const starButton = page.getByTestId(/star-4-/).first();
-    await starButton.click();
+    await bookTrackerPage.rateBook(bookId, 4);
     
     // Verify star is filled (by checking if it has the filled class or visible)
+    const starButton = bookTrackerPage.page.getByTestId(`star-4-${bookId}`);
     await expect(starButton).toBeVisible();
   });
 
-  test('should filter books by status', async ({ page }) => {
+  test('should filter books by status', async () => {
     // Add multiple books with different statuses
-    await page.goto('/');
+    await bookTrackerPage.addBookManually({
+      title: 'Want to Read Book',
+      status: 'want-to-read',
+    });
+    await bookTrackerPage.expectBookVisible('Want to Read Book');
     
-    // Add first book - want to read
-    await page.getByTestId('add-book-button').click();
-    await page.getByTestId('form-title').fill('Want to Read Book');
-    await page.getByTestId('form-status').selectOption('want-to-read');
-    await page.getByTestId('form-save').click();
-    
-    // Wait for form to close and book to appear
-    await expect(page.getByTestId('book-form')).not.toBeVisible();
-    await expect(page.getByText('Want to Read Book')).toBeVisible();
-    
-    // Add second book - reading
-    await page.getByTestId('add-book-button').click();
-    await page.getByTestId('form-title').fill('Reading Book');
-    await page.getByTestId('form-status').selectOption('reading');
-    await page.getByTestId('form-save').click();
-    
-    // Wait for form to close and book to appear
-    await expect(page.getByTestId('book-form')).not.toBeVisible();
-    await expect(page.getByText('Reading Book')).toBeVisible();
+    await bookTrackerPage.addBookManually({
+      title: 'Reading Book',
+      status: 'reading',
+    });
+    await bookTrackerPage.expectBookVisible('Reading Book');
     
     // Filter by reading status
-    await page.getByTestId('filter-status').selectOption('reading');
+    await bookTrackerPage.filterByStatus('reading');
     
     // Wait for filtering to apply and verify only reading book is shown
-    await expect(page.getByText('Reading Book')).toBeVisible();
-    await expect(page.getByText('Want to Read Book')).not.toBeVisible();
+    await bookTrackerPage.expectBookVisible('Reading Book');
+    await bookTrackerPage.expectBookNotVisible('Want to Read Book');
   });
 
-  test('should filter books by author', async ({ page }) => {
+  test('should filter books by author', async () => {
     // Add books with different authors
-    await page.goto('/');
+    await bookTrackerPage.addBookManually({
+      title: 'Author A Book',
+      author: 'Author A',
+    });
     
-    await page.getByTestId('add-book-button').click();
-    await page.getByTestId('form-title').fill('Author A Book');
-    await page.getByTestId('form-author').fill('Author A');
-    await page.getByTestId('form-save').click();
-    
-    await page.getByTestId('add-book-button').click();
-    await page.getByTestId('form-title').fill('Author B Book');
-    await page.getByTestId('form-author').fill('Author B');
-    await page.getByTestId('form-save').click();
+    await bookTrackerPage.addBookManually({
+      title: 'Author B Book',
+      author: 'Author B',
+    });
     
     // Filter by author
-    await page.getByTestId('filter-author').fill('Author A');
+    await bookTrackerPage.filterByAuthor('Author A');
     
     // Wait for filtering to apply - verify Author B disappears or Author A appears
-    await expect(page.getByText('Author A Book')).toBeVisible();
-    await expect(page.getByText('Author B Book')).not.toBeVisible({ timeout: 5000 });
+    await bookTrackerPage.expectBookVisible('Author A Book');
+    await bookTrackerPage.expectBookNotVisible('Author B Book');
   });
 
-  test('should search collection', async ({ page }) => {
+  test('should search collection', async () => {
     // Add books
-    await page.goto('/');
+    await bookTrackerPage.addBookManually({
+      title: 'Book One',
+    });
     
-    await page.getByTestId('add-book-button').click();
-    await page.getByTestId('form-title').fill('Book One');
-    await page.getByTestId('form-save').click();
-    
-    await page.getByTestId('add-book-button').click();
-    await page.getByTestId('form-title').fill('Book Two');
-    await page.getByTestId('form-save').click();
+    await bookTrackerPage.addBookManually({
+      title: 'Book Two',
+    });
     
     // Search collection
-    await page.getByTestId('filter-search').fill('Book One');
+    await bookTrackerPage.searchCollection('Book One');
     
     // Wait for filtering to apply - verify Book Two disappears
-    await expect(page.getByText('Book One')).toBeVisible();
-    await expect(page.getByText('Book Two')).not.toBeVisible({ timeout: 5000 });
+    await bookTrackerPage.expectBookVisible('Book One');
+    await bookTrackerPage.expectBookNotVisible('Book Two');
   });
 
-  test('should clear all filters', async ({ page }) => {
+  test('should clear all filters', async () => {
     // Add a book
-    await page.goto('/');
-    await page.getByTestId('add-book-button').click();
-    await page.getByTestId('form-title').fill('Filter Test Book');
-    await page.getByTestId('form-status').selectOption('completed');
-    await page.getByTestId('form-save').click();
+    await bookTrackerPage.addBookManually({
+      title: 'Filter Test Book',
+      status: 'completed',
+    });
     
     // Apply filter
-    await page.getByTestId('filter-status').selectOption('want-to-read');
-    await expect(page.getByTestId('book-list-empty')).toBeVisible();
+    await bookTrackerPage.filterByStatus('want-to-read');
+    await expect(bookTrackerPage.bookListEmpty).toBeVisible();
     
     // Clear filters
-    await page.getByTestId('clear-filters').click();
+    await bookTrackerPage.clearFilters();
     
     // Wait for filters to clear and UI to update
-    await expect(page.getByText('Filter Test Book')).toBeVisible();
+    await bookTrackerPage.expectBookVisible('Filter Test Book');
   });
 
-  test('should cancel form without saving', async ({ page }) => {
-    await page.goto('/');
-    await page.getByTestId('add-book-button').click();
-    
-    await expect(page.getByTestId('book-form')).toBeVisible();
-    await page.getByTestId('form-title').fill('Cancel Test');
-    await page.getByTestId('form-cancel').click();
+  test('should cancel form without saving', async () => {
+    await bookTrackerPage.addBookButton.click();
+    await expect(bookTrackerPage.bookForm).toBeVisible();
+    await bookTrackerPage.formTitle.fill('Cancel Test');
+    await bookTrackerPage.formCancel.click();
     
     // Verify form is closed and book not added
-    await expect(page.getByTestId('book-form')).not.toBeVisible();
-    await expect(page.getByText('Cancel Test')).not.toBeVisible();
+    await expect(bookTrackerPage.bookForm).not.toBeVisible();
+    await bookTrackerPage.expectBookNotVisible('Cancel Test');
   });
 });
 
